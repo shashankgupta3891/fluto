@@ -14,9 +14,9 @@ class JsonEditor extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = jsonMapEntryList[index];
         return ValueInputListTile(
-          title: item.key,
-          value: item.value,
-          onChanged: (dynamic value) {},
+          jsonKey: item.key,
+          jsonValue: item.value,
+          onChanged: (final value) {},
         );
       },
     );
@@ -26,62 +26,46 @@ class JsonEditor extends StatelessWidget {
 class ValueInputListTile<T> extends StatelessWidget {
   const ValueInputListTile({
     Key? key,
-    required this.title,
-    required this.value,
+    required this.jsonKey,
+    required this.jsonValue,
     required this.onChanged,
   }) : super(key: key);
 
-  final String title;
-  final T value;
+  final String jsonKey;
+  final T jsonValue;
   final ValueChanged<T> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        title: Text(title),
-        subtitle: Text("Value: $value"),
-        trailing: PopupMenuButton<int>(
-          itemBuilder: (context) => [
-            // popupmenu item 1
-            PopupMenuItem(
-              value: 1,
-              // row has two child icon and text.
-              child: Row(
-                children: const [
-                  Icon(Icons.star),
-                  SizedBox(
-                    // sized box with width 10
-                    width: 10,
+        title: Text(jsonKey),
+        subtitle: Text("Value: $jsonValue"),
+        trailing: PopupMenuButton<JsonEditOptionType>(
+          itemBuilder: (context) {
+            return JsonEditOptionType.values
+                .map(
+                  (e) => PopupMenuItem(
+                    value: e,
+                    child: Row(
+                      children: [
+                        Icon(e.icon),
+                        const SizedBox(width: 10),
+                        Text(e.name)
+                      ],
+                    ),
                   ),
-                  Text("Get The App")
-                ],
-              ),
-            ),
-            // popupmenu item 2
-            PopupMenuItem(
-              value: 2,
-              // row has two child icon and text
-              child: Row(
-                children: const [
-                  Icon(Icons.chrome_reader_mode),
-                  SizedBox(
-                    // sized box with width 10
-                    width: 10,
-                  ),
-                  Text("About")
-                ],
-              ),
-            ),
-          ],
-          offset: const Offset(0, 100),
-          color: Colors.grey,
-          elevation: 2,
+                )
+                .toList();
+          },
+          onSelected: (val) async {
+            if (val == JsonEditOptionType.edit) {
+              final result =
+                  await showValueEditDialog(context, jsonKey, jsonValue);
+              if (result != null) onChanged.call(result);
+            }
+          },
         ),
-        onTap: () async {
-          final result = await showValueEditDialog(context, title, value);
-          if (result != null) onChanged.call(result);
-        },
       ),
     );
   }
@@ -122,4 +106,12 @@ Future<T?> showValueEditDialog<T>(
       );
     },
   );
+}
+
+enum JsonEditOptionType {
+  edit(Icons.edit),
+  delete(Icons.delete);
+
+  const JsonEditOptionType(this.icon);
+  final IconData icon;
 }

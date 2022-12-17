@@ -72,8 +72,8 @@ class _MockLocationPluginScreenState extends State<MockLocationPluginScreen> {
       body: Column(
         children: [
           ValueInputListTile<double?>(
-            title: "latitude",
-            value: position?.latitude,
+            jsonKey: "latitude",
+            jsonValue: position?.latitude,
             onChanged: (value) {
               if (value != null) {
                 setState(() {
