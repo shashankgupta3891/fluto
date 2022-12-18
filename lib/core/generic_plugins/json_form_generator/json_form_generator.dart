@@ -17,7 +17,7 @@ class JsonEditor extends StatelessWidget {
       itemCount: jsonMapEntryList.length,
       itemBuilder: (context, index) {
         final item = jsonMapEntryList[index];
-        return ValueInputListTile(
+        return MapEntryListTile(
           jsonKey: item.key,
           jsonValue: item.value,
           onEdit: () async {
@@ -52,8 +52,8 @@ class JsonEditor extends StatelessWidget {
   }
 }
 
-class ValueInputListTile<T> extends StatelessWidget {
-  const ValueInputListTile({
+class MapEntryListTile<T> extends StatelessWidget {
+  const MapEntryListTile({
     Key? key,
     required this.jsonKey,
     required this.jsonValue,
@@ -70,77 +70,106 @@ class ValueInputListTile<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(jsonKey);
+    print(jsonValue.runtimeType);
+    print("isMap");
+    print(jsonValue is Map);
     if (jsonValue is List) {
-      var elementList = jsonValue as List;
+      print("Iterable");
+      return ListTypeListTile(
+        jsonKey: jsonKey,
+        jsonValue: jsonValue,
+        onChange: (value) {
+          onChange.call(value);
+        },
+        onDelete: onDelete,
+        onEdit: onEdit,
+      );
 
-      return Card(
-        clipBehavior: Clip.antiAlias,
-        child: ExpansionTile(
-          maintainState: true,
-          initiallyExpanded: true,
-          title: Text(jsonKey),
-          subtitle: Text("Value: $jsonValue"),
-          children: [
-            ...elementList.mapIndexed(
-              (index, e) => ListItemEntryTile(
-                value: e,
-                onSelectOption: (final option) async {
-                  if (option == ListItemEditOptionType.edit) {
-                    final result = await showValueEditDialog(
-                      context,
-                      "Index:$index",
-                      e,
-                    );
-                    print("result: $result");
+      // var elementList = jsonValue as List;
 
-                    final newList = [...elementList]
-                      ..insert(index, result)
-                      ..removeAt(index + 1);
+      // return Card(
+      //   clipBehavior: Clip.antiAlias,
+      //   child: ExpansionTile(
+      //     maintainState: true,
+      //     initiallyExpanded: true,
+      //     title: Text(jsonKey),
+      //     subtitle: Text("Value: $jsonValue"),
+      //     children: [
+      //       ...elementList.mapIndexed(
+      //         (index, e) => ListItemEntryTile(
+      //           value: e,
+      //           onSelectOption: (final option) async {
+      //             if (option == ListItemEditOptionType.edit) {
+      //               final result = await showValueEditDialog(
+      //                 context,
+      //                 "Index:$index",
+      //                 e,
+      //               );
+      //               print("result: $result");
 
-                    onChange.call(newList as T);
-                  } else if (option == ListItemEditOptionType.delete) {
-                    final newList = [...elementList]..removeAt(index);
+      //               final newList = [...elementList]
+      //                 ..insert(index, result)
+      //                 ..removeAt(index + 1);
 
-                    onChange.call(newList as T);
-                  } else if (option == ListItemEditOptionType.swap) {
-                    final resultIndex = await showGetIntDialog(context);
-                    if (resultIndex != null) {
-                      final newList = [...elementList]
-                        ..swap(index, resultIndex);
-                      onChange.call(newList as T);
-                    }
-                  }
-                },
-              ),
-            ),
-            Card(
-              color: Colors.blue,
-              clipBehavior: Clip.antiAlias,
-              child: PopupMenuButton(
-                itemBuilder: (context) {
-                  return ListEditOptionType.values
-                      .map(
-                        (e) => PopupMenuItem(
-                          value: e,
-                          child: Row(
-                            children: [
-                              Icon(e.icon),
-                              const SizedBox(width: 10),
-                              Text(e.name)
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList();
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text("List Options"),
-                ),
-              ),
-            )
-          ],
-        ),
+      //               onChange.call(newList as T);
+      //             } else if (option == ListItemEditOptionType.delete) {
+      //               final newList = [...elementList]..removeAt(index);
+
+      //               onChange.call(newList as T);
+      //             } else if (option == ListItemEditOptionType.swap) {
+      //               final resultIndex = await showGetIntDialog(context);
+      //               if (resultIndex != null) {
+      //                 final newList = [...elementList]
+      //                   ..swap(index, resultIndex);
+      //                 onChange.call(newList as T);
+      //               }
+      //             }
+      //           },
+      //         ),
+      //       ),
+      //       Card(
+      //         color: Colors.blue,
+      //         clipBehavior: Clip.antiAlias,
+      //         child: PopupMenuButton(
+      //           itemBuilder: (context) {
+      //             return ListEditOptionType.values
+      //                 .map(
+      //                   (e) => PopupMenuItem(
+      //                     value: e,
+      //                     child: Row(
+      //                       children: [
+      //                         Icon(e.icon),
+      //                         const SizedBox(width: 10),
+      //                         Text(e.name)
+      //                       ],
+      //                     ),
+      //                   ),
+      //                 )
+      //                 .toList();
+      //           },
+      //           child: const Padding(
+      //             padding: EdgeInsets.all(8.0),
+      //             child: Text("List Options"),
+      //           ),
+      //         ),
+      //       )
+      //     ],
+      //   ),
+      // );
+
+    }
+
+    if (jsonValue is Map) {
+      print("It is Map");
+      return MapTypeListTile(
+        jsonKey: jsonKey,
+        jsonValue: jsonValue,
+        onChange: (value) {
+          onChange.call(value);
+        },
+        onDelete: onDelete,
+        onEdit: onEdit,
       );
     }
 
@@ -173,6 +202,190 @@ class ValueInputListTile<T> extends StatelessWidget {
             }
           },
         ),
+      ),
+    );
+  }
+}
+
+class ListTypeListTile extends StatelessWidget {
+  const ListTypeListTile({
+    super.key,
+    required this.jsonValue,
+    required this.jsonKey,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onChange,
+  });
+  final String jsonKey;
+  final dynamic jsonValue;
+
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final ValueChanged onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    var elementList = jsonValue as List;
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        maintainState: true,
+        initiallyExpanded: true,
+        title: Text(jsonKey),
+        subtitle: Text("Value: $jsonValue"),
+        children: [
+          ...elementList.mapIndexed(
+            (index, e) => ListItemEntryTile(
+              value: e,
+              onSelectOption: (final option) async {
+                if (option == ListItemEditOptionType.edit) {
+                  final result = await showValueEditDialog(
+                    context,
+                    "Index:$index",
+                    e,
+                  );
+                  print("result: $result");
+
+                  final newList = [...elementList]
+                    ..insert(index, result)
+                    ..removeAt(index + 1);
+
+                  onChange.call(newList);
+                } else if (option == ListItemEditOptionType.delete) {
+                  final newList = [...elementList]..removeAt(index);
+
+                  onChange.call(newList);
+                } else if (option == ListItemEditOptionType.swap) {
+                  final resultIndex = await showGetIntDialog(context);
+                  if (resultIndex != null) {
+                    final newList = [...elementList]..swap(index, resultIndex);
+                    onChange.call(newList);
+                  }
+                }
+              },
+            ),
+          ),
+          Card(
+            color: Colors.blue,
+            clipBehavior: Clip.antiAlias,
+            child: PopupMenuButton(
+              itemBuilder: (context) {
+                return ListEditOptionType.values
+                    .map(
+                      (e) => PopupMenuItem(
+                        value: e,
+                        child: Row(
+                          children: [
+                            Icon(e.icon),
+                            const SizedBox(width: 10),
+                            Text(e.name)
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList();
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text("List Options"),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class MapTypeListTile extends StatelessWidget {
+  const MapTypeListTile({
+    super.key,
+    required this.jsonKey,
+    required this.jsonValue,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onChange,
+  });
+  final String jsonKey;
+  final dynamic jsonValue;
+
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final ValueChanged onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    var elementList = (jsonValue as Map).entries;
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        maintainState: true,
+        initiallyExpanded: true,
+        title: Text(jsonKey),
+        subtitle: Text("Value: $jsonValue"),
+        children: [
+          ...elementList.mapIndexed(
+            (index, e) => MapEntryListTile(
+              jsonKey: e.key, jsonValue: e.value, onChange: (final value) {},
+              onDelete: () {}, onEdit: () {},
+
+              // value: e,
+              // onSelectOption: (final option) async {
+              //   if (option == ListItemEditOptionType.edit) {
+              //     final result = await showValueEditDialog(
+              //       context,
+              //       "Index:$index",
+              //       e,
+              //     );
+              //     print("result: $result");
+
+              //     final newList = [...elementList]
+              //       ..insert(index, result)
+              //       ..removeAt(index + 1);
+
+              //     onChange.call(newList);
+              //   } else if (option == ListItemEditOptionType.delete) {
+              //     final newList = [...elementList]..removeAt(index);
+
+              //     onChange.call(newList);
+              //   } else if (option == ListItemEditOptionType.swap) {
+              //     final resultIndex = await showGetIntDialog(context);
+              //     if (resultIndex != null) {
+              //       final newList = [...elementList]
+              //         ..swap(index, resultIndex);
+              //       onChange.call(newList);
+              //     }
+              //   }
+              // },
+            ),
+          ),
+          Card(
+            color: Colors.blue,
+            clipBehavior: Clip.antiAlias,
+            child: PopupMenuButton(
+              itemBuilder: (context) {
+                return ListEditOptionType.values
+                    .map(
+                      (e) => PopupMenuItem(
+                        value: e,
+                        child: Row(
+                          children: [
+                            Icon(e.icon),
+                            const SizedBox(width: 10),
+                            Text(e.name)
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList();
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text("List Options"),
+              ),
+            ),
+          )
+        ],
       ),
     );
   }

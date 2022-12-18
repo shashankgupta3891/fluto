@@ -77,12 +77,20 @@ class _MockLocationPluginScreenState extends State<MockLocationPluginScreen> {
           "integer": 37,
           "double_float": 23.23,
           "array_array": [],
-          "array_array_with_value": ["afsad", "asdf"],
+          "array_array_with_value": [
+            "afsad",
+            "asdf",
+            {
+              "@34": 2,
+            }
+          ],
           "nullll": null,
           "empty_object": {},
           "filled_object": {
             "key1": "39",
             "key2": 93,
+            "list": [],
+            "list2": [2, 5, 2, 2]
           }
         },
         onChange: (Json value) {
