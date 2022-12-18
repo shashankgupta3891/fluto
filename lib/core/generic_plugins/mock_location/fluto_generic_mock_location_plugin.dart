@@ -69,33 +69,54 @@ class _MockLocationPluginScreenState extends State<MockLocationPluginScreen> {
           )
         ],
       ),
-      body: Column(
-        children: [
-          ValueInputListTile<double?>(
-            jsonKey: "latitude",
-            jsonValue: position?.latitude,
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  position?.copyWith(latitude: value);
-                });
-              }
-            },
-          ),
-          ListTile(
-            title: const Text("latitude"),
-            subtitle: Text(position?.latitude.toString() ?? ""),
-          ),
-          ListTile(
-            title: const Text("latitude"),
-            subtitle: Text(position?.latitude.toString() ?? ""),
-          ),
-          ListTile(
-            title: const Text("latitude"),
-            subtitle: Text(position?.latitude.toString() ?? ""),
-          )
-        ],
+
+      body: JsonEditor(
+        json: const {
+          "hello": "hhe",
+          "hey": true,
+          "integer": 37,
+          "double_float": 23.23,
+          "array_array": [],
+          "array_array_with_value": ["afsad", "asdf"],
+          "nullll": null,
+          "empty_object": {},
+          "filled_object": {
+            "key1": "39",
+            "key2": 93,
+          }
+        },
+        onChange: (Json value) {
+          print(value);
+        },
       ),
+
+      // body: Column(
+      //   children: [
+      //     // ValueInputListTile<double?>(
+      //     //   jsonKey: "latitude",
+      //     //   jsonValue: position?.latitude,
+      //     //   onChanged: (value) {
+      //     //     if (value != null) {
+      //     //       setState(() {
+      //     //         position?.copyWith(latitude: value);
+      //     //       });
+      //     //     }
+      //     //   },
+      //     // ),
+      //     ListTile(
+      //       title: const Text("latitude"),
+      //       subtitle: Text(position?.latitude.toString() ?? ""),
+      //     ),
+      //     ListTile(
+      //       title: const Text("latitude"),
+      //       subtitle: Text(position?.latitude.toString() ?? ""),
+      //     ),
+      //     ListTile(
+      //       title: const Text("latitude"),
+      //       subtitle: Text(position?.latitude.toString() ?? ""),
+      //     )
+      //   ],
+      // ),
     );
   }
 }

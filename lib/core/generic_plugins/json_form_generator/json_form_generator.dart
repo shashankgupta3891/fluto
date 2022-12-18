@@ -1,9 +1,13 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 
-class JsonEditor extends StatelessWidget {
-  final Map<String, dynamic> json;
+typedef Json = Map<String, dynamic>;
 
-  const JsonEditor({super.key, required this.json});
+class JsonEditor extends StatelessWidget {
+  final Json json;
+  final ValueChanged<Json> onChange;
+
+  const JsonEditor({super.key, required this.json, required this.onChange});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +20,32 @@ class JsonEditor extends StatelessWidget {
         return ValueInputListTile(
           jsonKey: item.key,
           jsonValue: item.value,
-          onChanged: (final value) {},
+          onEdit: () async {
+            final result =
+                await showValueEditDialog(context, item.key, item.value);
+            print("result: $result");
+
+            final newMap = {
+              ...json,
+              ...{item.key: result}
+            };
+            onChange.call(newMap);
+          },
+          onDelete: () {
+            final newMap = {
+              ...json,
+            }..remove(item.key);
+            onChange.call(newMap);
+          },
+          onChange: (value) async {
+            print("result: $value");
+
+            final newMap = {
+              ...json,
+              ...{item.key: value}
+            };
+            onChange.call(newMap);
+          },
         );
       },
     );
@@ -28,15 +57,93 @@ class ValueInputListTile<T> extends StatelessWidget {
     Key? key,
     required this.jsonKey,
     required this.jsonValue,
-    required this.onChanged,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onChange,
   }) : super(key: key);
 
   final String jsonKey;
   final T jsonValue;
-  final ValueChanged<T> onChanged;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final ValueChanged<T> onChange;
 
   @override
   Widget build(BuildContext context) {
+    if (jsonValue is List) {
+      var elementList = jsonValue as List;
+
+      return Card(
+        clipBehavior: Clip.antiAlias,
+        child: ExpansionTile(
+          maintainState: true,
+          initiallyExpanded: true,
+          title: Text(jsonKey),
+          subtitle: Text("Value: $jsonValue"),
+          children: [
+            ...elementList.mapIndexed(
+              (index, e) => ListItemEntryTile(
+                value: e,
+                onSelectOption: (final option) async {
+                  if (option == ListItemEditOptionType.edit) {
+                    final result = await showValueEditDialog(
+                      context,
+                      "Index:$index",
+                      e,
+                    );
+                    print("result: $result");
+
+                    final newList = [...elementList]
+                      ..insert(index, result)
+                      ..removeAt(index + 1);
+
+                    onChange.call(newList as T);
+                  } else if (option == ListItemEditOptionType.delete) {
+                    final newList = [...elementList]..removeAt(index);
+
+                    onChange.call(newList as T);
+                  } else if (option == ListItemEditOptionType.swap) {
+                    final resultIndex = await showGetIntDialog(context);
+                    if (resultIndex != null) {
+                      final newList = [...elementList]
+                        ..swap(index, resultIndex);
+                      onChange.call(newList as T);
+                    }
+                  }
+                },
+              ),
+            ),
+            Card(
+              color: Colors.blue,
+              clipBehavior: Clip.antiAlias,
+              child: PopupMenuButton(
+                itemBuilder: (context) {
+                  return ListEditOptionType.values
+                      .map(
+                        (e) => PopupMenuItem(
+                          value: e,
+                          child: Row(
+                            children: [
+                              Icon(e.icon),
+                              const SizedBox(width: 10),
+                              Text(e.name)
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList();
+                },
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text("List Options"),
+                ),
+              ),
+            )
+          ],
+        ),
+      );
+    }
+
     return Card(
       child: ListTile(
         title: Text(jsonKey),
@@ -60,11 +167,47 @@ class ValueInputListTile<T> extends StatelessWidget {
           },
           onSelected: (val) async {
             if (val == JsonEditOptionType.edit) {
-              final result =
-                  await showValueEditDialog(context, jsonKey, jsonValue);
-              if (result != null) onChanged.call(result);
+              onEdit.call();
+            } else if (val == JsonEditOptionType.delete) {
+              onDelete.call();
             }
           },
+        ),
+      ),
+    );
+  }
+}
+
+class ListItemEntryTile extends StatelessWidget {
+  final dynamic value;
+  final ValueChanged<ListItemEditOptionType> onSelectOption;
+  const ListItemEntryTile(
+      {super.key, this.value, required this.onSelectOption});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      child: ListTile(
+        title: Text(value.toString()),
+        trailing: PopupMenuButton<ListItemEditOptionType>(
+          itemBuilder: (context) {
+            return ListItemEditOptionType.values
+                .map(
+                  (e) => PopupMenuItem(
+                    value: e,
+                    child: Row(
+                      children: [
+                        Icon(e.icon),
+                        const SizedBox(width: 10),
+                        Text(e.name)
+                      ],
+                    ),
+                  ),
+                )
+                .toList();
+          },
+          onSelected: onSelectOption.call,
         ),
       ),
     );
@@ -76,19 +219,30 @@ Future<T?> showValueEditDialog<T>(
   return showDialog(
     context: context,
     builder: (context) {
+      var newValue = value;
       return StatefulBuilder(
         builder: (context, setState) {
-          var newValue = value;
           return AlertDialog(
             title: Text("Edit $valueName"),
-            content: TextFormField(
-              initialValue: newValue.toString(),
-              onChanged: (val) {
-                if (newValue is double?) {
-                  newValue = double.tryParse(val.toString()) as T?;
-                }
-              },
-            ),
+            content: newValue is bool
+                ? Switch.adaptive(
+                    value: newValue as bool,
+                    onChanged: (value) {
+                      setState(() {
+                        newValue = value as T;
+                      });
+                    },
+                  )
+                : TextFormField(
+                    initialValue: newValue.toString(),
+                    onChanged: (val) {
+                      if (newValue is double?) {
+                        newValue = double.tryParse(val.toString()) as T?;
+                      } else {
+                        newValue = val as T?;
+                      }
+                    },
+                  ),
             actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -108,10 +262,62 @@ Future<T?> showValueEditDialog<T>(
   );
 }
 
+Future<int?> showGetIntDialog(BuildContext context) async {
+  return showDialog(
+    context: context,
+    builder: (context) {
+      int? newValue;
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text("Replace with Index"),
+            content: TextFormField(
+              initialValue: newValue?.toString() ?? "",
+              onChanged: (val) {
+                newValue = int.tryParse(val);
+              },
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop<int?>(context, newValue);
+                },
+                child: const Text("Change"),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
 enum JsonEditOptionType {
   edit(Icons.edit),
   delete(Icons.delete);
 
   const JsonEditOptionType(this.icon);
+  final IconData icon;
+}
+
+enum ListItemEditOptionType {
+  edit(Icons.edit),
+  delete(Icons.delete),
+  swap(Icons.swap_vert);
+
+  const ListItemEditOptionType(this.icon);
+  final IconData icon;
+}
+
+enum ListEditOptionType {
+  addItem(Icons.add),
+  addItemAt(Icons.add),
+  deleteAll(Icons.delete);
+
+  const ListEditOptionType(this.icon);
   final IconData icon;
 }
