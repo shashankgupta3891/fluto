@@ -1,8 +1,9 @@
-import 'package:fluto/core/generic_plugins/json_form_generator/json_form_generator.dart';
 import 'package:fluto/core/generic_plugins/mock_location/core/fluto_geo_locator_manager.dart';
 import 'package:fluto/core/generic_plugins/mock_location/model/location_position_model.dart';
 import 'package:fluto/core/pluggable.dart';
 import 'package:flutter/material.dart';
+
+import '../json_form_generator/json_form_generator_new.dart';
 
 class FlutoGenericMockLocationPlugin extends Pluggable {
   FlutoGeoLocatorManager flutoGeoLocatorManager;
@@ -70,30 +71,9 @@ class _MockLocationPluginScreenState extends State<MockLocationPluginScreen> {
         ],
       ),
 
-      body: JsonEditor(
-        json: const {
-          "hello": "hhe",
-          "hey": true,
-          "integer": 37,
-          "double_float": 23.23,
-          "array_array": [],
-          "array_array_with_value": [
-            "afsad",
-            "asdf",
-            {
-              "@34": 2,
-            }
-          ],
-          "nullll": null,
-          "empty_object": {},
-          "filled_object": {
-            "key1": "39",
-            "key2": 93,
-            "list": [],
-            "list2": [2, 5, 2, 2]
-          }
-        },
-        onChange: (Json value) {
+      body: JsonFormGenerator(
+        json: jsonDemo2,
+        onChange: (value) {
           print(value);
         },
       ),
@@ -128,3 +108,38 @@ class _MockLocationPluginScreenState extends State<MockLocationPluginScreen> {
     );
   }
 }
+
+const jsonDemo1 = {
+  "hello": "hhe",
+  "hey": true,
+  "integer": 37,
+  "double_float": 23.23,
+  "array_array": [],
+  "array_array_with_value": [
+    "afsad",
+    "asdf",
+    {
+      "@34": 2,
+    }
+  ],
+  "nullll": null,
+  "empty_object": {},
+  "filled_object": {
+    "key1": "39",
+    "key2": 93,
+    "list": [],
+    "list2": [2, 5, 2, 2]
+  }
+};
+
+const jsonDemo2 = [
+  "afsad",
+  "asdf",
+  1,
+  4.7,
+  null,
+  [],
+  {
+    "@34": 2,
+  }
+];

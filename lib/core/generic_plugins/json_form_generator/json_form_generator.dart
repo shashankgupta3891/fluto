@@ -17,7 +17,7 @@ class JsonEditor extends StatelessWidget {
       itemCount: jsonMapEntryList.length,
       itemBuilder: (context, index) {
         final item = jsonMapEntryList[index];
-        return MapEntryListTile(
+        return JsonEntryListTile(
           jsonKey: item.key,
           jsonValue: item.value,
           onEdit: () async {
@@ -52,8 +52,8 @@ class JsonEditor extends StatelessWidget {
   }
 }
 
-class MapEntryListTile<T> extends StatelessWidget {
-  const MapEntryListTile({
+class JsonEntryListTile<T> extends StatelessWidget {
+  const JsonEntryListTile({
     Key? key,
     required this.jsonKey,
     required this.jsonValue,
@@ -70,10 +70,11 @@ class MapEntryListTile<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(jsonKey);
-    print(jsonValue.runtimeType);
-    print("isMap");
-    print(jsonValue is Map);
+    // print(jsonKey);
+    // print(jsonValue.runtimeType);
+    // print("isMap");
+    // print(jsonValue is Map);
+
     if (jsonValue is List) {
       print("Iterable");
       return ListTypeListTile(
@@ -325,7 +326,7 @@ class MapTypeListTile extends StatelessWidget {
         subtitle: Text("Value: $jsonValue"),
         children: [
           ...elementList.mapIndexed(
-            (index, e) => MapEntryListTile(
+            (index, e) => JsonEntryListTile(
               jsonKey: e.key, jsonValue: e.value, onChange: (final value) {},
               onDelete: () {}, onEdit: () {},
 
