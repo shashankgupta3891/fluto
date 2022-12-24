@@ -72,7 +72,7 @@ class _MockLocationPluginScreenState extends State<MockLocationPluginScreen> {
       ),
 
       body: JsonFormGenerator(
-        json: jsonDemo2,
+        json: jsonDemo1,
         onChange: (value) {
           print(value);
         },
@@ -119,7 +119,7 @@ const jsonDemo1 = {
     "afsad",
     "asdf",
     {
-      "@34": 2,
+      "34": 2,
     }
   ],
   "nullll": null,
@@ -140,6 +140,6 @@ const jsonDemo2 = [
   null,
   [],
   {
-    "@34": 2,
+    "34": 2,
   }
 ];

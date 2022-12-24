@@ -211,22 +211,20 @@ class ChildJsonGenerator extends StatelessWidget {
       );
     }
 
-    if (json.value is List) {
-      var elementList = json.value as List;
-      print("elementList: $elementList");
-
-      if (elementList.isEmpty) return Container();
-
+    if (json is Map) {
+      var elementList = json as Map;
+      print(elementList.entries.length);
       return Card(
         clipBehavior: Clip.antiAlias,
+        elevation: 4,
         child: ExpansionTile(
           maintainState: true,
           initiallyExpanded: true,
-          title: Text(json.key.toString()),
-          subtitle: Text("Value: ${json.value.toString()}"),
+          title: const Text("Map"),
+          subtitle: Text("Value: ${elementList.toString()}"),
           children: [
-            ...elementList.mapIndexed(
-              (index, e) => ChildJsonGenerator(
+            ...elementList.entries.map(
+              (e) => ChildJsonGenerator(
                 json: e,
                 onChange: (value) {},
               ),
@@ -262,49 +260,116 @@ class ChildJsonGenerator extends StatelessWidget {
       );
     }
 
-    if (json.value is Map) {
-      var elementList = json.value as Map;
-      return Card(
-        clipBehavior: Clip.antiAlias,
-        child: ExpansionTile(
-          maintainState: true,
-          initiallyExpanded: true,
-          title: Text(json.key.toString()),
-          subtitle: Text("Value: ${json.value.toString()}"),
-          children: [
-            ...elementList.entries.mapIndexed(
-              (index, e) => JsonFormGenerator(
-                json: e,
-                onChange: (value) {},
-              ),
-            ),
-            Card(
-              color: Colors.blue,
-              clipBehavior: Clip.antiAlias,
-              child: PopupMenuButton(
-                itemBuilder: (context) {
-                  return []
-                      .map(
-                        (e) => PopupMenuItem(
-                          value: e,
-                          child: Row(
-                            children: [
-                              Icon(e.icon),
-                              const SizedBox(width: 10),
-                              Text(e.name)
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList();
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text("List Options"),
+    if (json is MapEntry) {
+      var elementList = json as MapEntry;
+      print("elementList: $elementList");
+
+      if (json.value is List) {
+        var elementList = json.value as List;
+        // print("elementList: $elementList");
+
+        // if (elementList.isEmpty) return Container();
+
+        return Card(
+          elevation: 4,
+          clipBehavior: Clip.antiAlias,
+          child: ExpansionTile(
+            maintainState: true,
+            initiallyExpanded: true,
+            title: Text(json.key.toString()),
+            subtitle: Text("Value: ${json.value.toString()}"),
+            children: [
+              ...elementList.mapIndexed(
+                (index, e) => ChildJsonGenerator(
+                  json: e,
+                  onChange: (value) {},
                 ),
               ),
-            )
-          ],
+              Card(
+                color: Colors.blue,
+                clipBehavior: Clip.antiAlias,
+                child: PopupMenuButton(
+                  itemBuilder: (context) {
+                    return []
+                        .map(
+                          (e) => PopupMenuItem(
+                            value: e,
+                            child: Row(
+                              children: [
+                                Icon(e.icon),
+                                const SizedBox(width: 10),
+                                Text(e.name)
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList();
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text("List Options"),
+                  ),
+                ),
+              )
+            ],
+          ),
+        );
+      }
+
+      if (json.value is Map) {
+        var elementList = json.value as Map;
+        print(elementList);
+        return Card(
+          elevation: 4,
+          clipBehavior: Clip.antiAlias,
+          child: ExpansionTile(
+            maintainState: true,
+            initiallyExpanded: true,
+            title: Text(json.key.toString()),
+            subtitle: Text("Value: ${json.value.toString()}"),
+            children: [
+              ...elementList.entries.mapIndexed(
+                (index, e) => ChildJsonGenerator(
+                  json: e,
+                  onChange: (value) {},
+                ),
+              ),
+              Card(
+                color: Colors.blue,
+                clipBehavior: Clip.antiAlias,
+                child: PopupMenuButton(
+                  itemBuilder: (context) {
+                    return []
+                        .map(
+                          (e) => PopupMenuItem(
+                            value: e,
+                            child: Row(
+                              children: [
+                                Icon(e.icon),
+                                const SizedBox(width: 10),
+                                Text(e.name)
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList();
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text("List Options"),
+                  ),
+                ),
+              )
+            ],
+          ),
+        );
+      }
+
+      return Card(
+        elevation: 4,
+        child: ListTile(
+          title: Text(elementList.key.toString()),
+          subtitle: Text(elementList.value.toString()),
         ),
       );
     }
