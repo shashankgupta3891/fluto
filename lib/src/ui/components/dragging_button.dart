@@ -14,15 +14,19 @@ class DraggingButton extends StatelessWidget {
     final showDraggingButton = context
         .select<FlutoProvider, bool>((value) => value.showDraggingButton);
     return DraggableWidget(
-      bottomMargin: 80,
-      topMargin: 80,
+      bottomMargin: 120,
+      topMargin: 120,
       intialVisibility: showDraggingButton,
-      horizontalSpace: 20,
-      shadowBorderRadius: 50,
+      horizontalSpace: 5,
+      shadowBorderRadius: 1,
       initialPosition: AnchoringPosition.bottomRight,
       dragController: flutoProvider.dragController,
-      child: ElevatedButton(
-        child: const Text("Launch Fluto"),
+      normalShadow: const BoxShadow(
+          color: Colors.transparent, offset: Offset(0, 4), blurRadius: 2),
+      child: FloatingActionButton.extended(
+        backgroundColor: Colors.blueAccent,
+        icon: const Icon(Icons.bug_report),
+        label: const Text("Fluto"),
         onPressed: () {
           flutoProvider.setSheetState(PluginSheetState.clicked);
         },

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 Future<void> showFlutoBottomSheet(BuildContext context) async {
-  final pluginList = PlutoPluginManager.plugins;
+  final pluginList = FlutoPluginManager.plugins;
 
   showModalBottomSheet(
     isDismissible: false,
@@ -34,44 +34,38 @@ Future<void> showFlutoBottomSheet(BuildContext context) async {
               ),
             ),
             const Divider(),
-            // const Padding(
-            //   padding: EdgeInsets.symmetric(horizontal: 16),
-            //   child: Text("Plugins"),
-            // ),
-            // SizedBox(
-            //   height: 50,
-            //   child:  ),
-
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                // shrinkWrap: true,
-                // scrollDirection: Axis.horizontal,
-                itemCount: pluginList.length,
-                itemBuilder: (context, index) {
-                  final plugin = pluginList[index];
+              child: Visibility(
+                visible: pluginList.isNotEmpty,
+                replacement: const Center(child: Text("No Plugin Available")),
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  itemCount: pluginList.length,
+                  itemBuilder: (context, index) {
+                    final plugin = pluginList[index];
 
-                  return Card(
-                    clipBehavior: Clip.antiAlias,
-                    child: ListTile(
-                      dense: true,
-                      leading: Icon(plugin.pluginConfiguration.icon),
-                      title: Text(plugin.pluginConfiguration.name),
-                      subtitle: Text(plugin.pluginConfiguration.description),
-                      onTap: () {
-                        plugin.setup(provider.navigatorKey);
-                        plugin.navigation.onLaunch.call();
-                      },
-                    ),
-                  );
-                  // return IconButton(
-                  //   icon: Icon(plugin.pluginConfiguration.icon),
-                  //   onPressed: () {
-                  //     plugin.setup(provider.navigatorKey);
-                  //     plugin.navigation.onLaunch.call();
-                  //   },
-                  // );
-                },
+                    return Card(
+                      clipBehavior: Clip.antiAlias,
+                      color: Color.alphaBlend(
+                        Theme.of(context).cardColor,
+                        Theme.of(context).secondaryHeaderColor,
+                      ),
+                      child: ListTile(
+                        dense: true,
+                        leading: Icon(plugin.pluginConfiguration.icon),
+                        title: Text(plugin.pluginConfiguration.name),
+                        subtitle:
+                            plugin.pluginConfiguration.description.isNotEmpty
+                                ? Text(plugin.pluginConfiguration.description)
+                                : null,
+                        onTap: () {
+                          plugin.setup(provider.navigatorKey);
+                          plugin.navigation.onLaunch.call();
+                        },
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ],

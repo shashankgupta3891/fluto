@@ -1,6 +1,6 @@
 import 'package:fluto_plugin_platform_interface/fluto_plugin_platform_interface.dart';
 
-abstract class PlutoPluginManager {
+abstract class FlutoPluginManager {
   static final List<Pluggable> _plugins = [];
 
   static List<Pluggable> get plugins => _plugins;

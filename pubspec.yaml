@@ -1,8 +1,10 @@
 name: fluto
-description: A new Flutter package project.
+description: >-
+  Fluto is an on-device debugging framework for Flutter applications.
 version: 0.1.0
 # homepage: 
-publish_to: none
+repository: https://github.com/shashankgupta3891/fluto
+# publish_to: pubspec
 
 environment:
   sdk: '>=2.18.5 <3.0.0'
@@ -14,9 +16,7 @@ dependencies:
     
   provider: ^6.0.4
   draggable_widget: ^2.0.0
-
-  fluto_plugin_platform_interface:
-    path: "../fluto_plugin_platform_interface"
+  fluto_plugin_platform_interface: ^0.1.1
 
 
 dev_dependencies:
