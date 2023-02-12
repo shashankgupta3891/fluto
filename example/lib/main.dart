@@ -1,9 +1,18 @@
+import 'dart:developer';
+
+import 'package:example/core/fluto/fluto_storage.dart';
+import 'package:example/core/fluto/plugin.dart';
 import 'package:fluto/fluto.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 GlobalKey<NavigatorState> navigatorKey = GlobalKey();
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await setupSharedPreference();
+  await setupFlutterSecureStorage();
   FlutoPluginManager.registerAllPlugins([
     ScreenLauncherPlugin(
       devIdentifier: 'one',
@@ -12,10 +21,45 @@ void main() {
         body: const Text("first screen"),
       ),
       name: "first screen",
-    )
+    ),
+    StorageTestPlugin(devIdentifier: "storage_test"),
   ]);
 
-  runApp(Fluto(navigatorKey: navigatorKey, child: const MyApp()));
+  runApp(Fluto(
+    navigatorKey: navigatorKey,
+    storage: SharedPreferencesFlutoStorage(),
+    child: const MyApp(),
+  ));
+}
+
+Future<void> setupFlutterSecureStorage() async {
+// Create storage
+  const storage = FlutterSecureStorage();
+
+// Save an integer value to 'counter' key.
+  await storage.write(key: 'counter', value: "1302");
+// Save an boolean value to 'repeat' key.
+  await storage.read(key: 'repeat');
+}
+
+Future<void> setupSharedPreference() async {
+  try {
+    // Obtain shared preferences.
+    final prefs = await SharedPreferences.getInstance();
+
+// Save an integer value to 'counter' key.
+    await prefs.setInt('counter', 10);
+// Save an boolean value to 'repeat' key.
+    await prefs.setBool('repeat', true);
+// Save an double value to 'decimal' key.
+    await prefs.setDouble('decimal', 1.5);
+// Save an String value to 'action' key.
+    await prefs.setString('action', 'Start');
+// Save an list of strings to 'items' key.
+    await prefs.setStringList('items', <String>['Earth', 'Moon', 'Sun']);
+  } catch (e, s) {
+    log("SharedPref Init", error: e, stackTrace: s);
+  }
 }
 
 class MyApp extends StatelessWidget {

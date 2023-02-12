@@ -5,3 +5,5 @@ export 'package:fluto/src/core/plugin_manager.dart';
 export 'package:fluto/src/extension/fluto_context_extension.dart';
 export 'package:fluto/src/fluto.dart';
 export 'package:fluto/src/ui/components/screen_wrapper.dart';
+export 'package:fluto_plugin_platform_interface/fluto_plugin_platform_interface.dart'
+    show FlutoStorage, Pluggable;

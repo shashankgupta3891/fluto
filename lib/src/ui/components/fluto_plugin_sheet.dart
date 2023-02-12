@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 Future<void> showFlutoBottomSheet(BuildContext context) async {
-  final pluginList = FlutoPluginManager.plugins;
+  final pluginList = FlutoPluginManager.pluginList;
 
   showModalBottomSheet(
     isDismissible: false,
@@ -59,7 +59,6 @@ Future<void> showFlutoBottomSheet(BuildContext context) async {
                                 ? Text(plugin.pluginConfiguration.description)
                                 : null,
                         onTap: () {
-                          plugin.setup(provider.navigatorKey);
                           plugin.navigation.onLaunch.call();
                         },
                       ),
