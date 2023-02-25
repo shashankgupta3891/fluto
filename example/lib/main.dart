@@ -1,16 +1,54 @@
 import 'dart:developer';
 
+import 'package:dio/dio.dart';
 import 'package:example/core/fluto/fluto_storage.dart';
 import 'package:example/core/fluto/plugin.dart';
 import 'package:fluto/fluto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 GlobalKey<NavigatorState> navigatorKey = GlobalKey();
 
+FlutoDynamicBaseUrlManager flutoDynamicBaseUrlManager =
+    FlutoDynamicBaseUrlManager(() async {
+  return "http://www.salfjas.asfjl";
+});
+
+class FlutoHTTPClient extends http.BaseClient {
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    Uri.tryParse("https://www.google.com");
+    // request.url.resolveUri(reference)
+    // request.url.replace();
+    // request.url.host
+    throw UnimplementedError();
+  }
+}
+
+Uri url = Uri();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final dio = Dio();
+  dio.interceptors.add(InterceptorsWrapper(
+    onRequest: (options, handler) {
+      // options.copyWith()
+      // options.copyWith(baseUrl: "baseUrl");
+      // handler.next(options);
+      // options.
+    },
+  ));
+
+  var url = Uri.https('example.com', 'whatsit/create');
+  var response =
+      await http.post(url, body: {'name': 'doodle', 'color': 'blue'});
+  final http.Client client = http.Client();
+
+  // client.send(request)
+
   await setupSharedPreference();
   await setupFlutterSecureStorage();
   FlutoPluginManager.registerAllPlugins([
@@ -23,6 +61,10 @@ void main() async {
       name: "first screen",
     ),
     StorageTestPlugin(devIdentifier: "storage_test"),
+    FlutoDynamicBaseUrlPlugin(
+      devIdentifier: 'base_url_change',
+      flutoDynamicBaseUrlManager: flutoDynamicBaseUrlManager,
+    )
   ]);
 
   runApp(Fluto(
