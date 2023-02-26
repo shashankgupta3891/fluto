@@ -46,10 +46,11 @@ class _FlutoState extends State<Fluto> {
     final savedData = await widget.storage.load();
     _savedData = savedData?.let((it) => FlutoStorageModel.fromJson(it));
 
-    final pluginList = FlutoPluginManager.pluginList;
+    final pluginList = FlutoPluginRegistrar.pluginList;
     for (final plugin in pluginList) {
       analysePlugin(plugin);
-      final pluginCallbackRegister = PluginCallbackRegister(
+      final pluginRegister = PluginRegister(
+        globalNavigatorKey: widget.navigatorKey,
         savePluginData: (final value) async {
           print("savePluginData value: $value");
           if (_savedData == null) {
@@ -72,8 +73,7 @@ class _FlutoState extends State<Fluto> {
           return _savedData?.pluginInternalData?[plugin.devIdentifier];
         },
       );
-      plugin.setup(widget.navigatorKey,
-          pluginCallbackRegister: pluginCallbackRegister);
+      plugin.setup(pluginRegister: pluginRegister);
     }
   }
 

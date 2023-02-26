@@ -51,7 +51,7 @@ void main() async {
 
   await setupSharedPreference();
   await setupFlutterSecureStorage();
-  FlutoPluginManager.registerAllPlugins([
+  FlutoPluginRegistrar.registerAllPlugins([
     ScreenLauncherPlugin(
       devIdentifier: 'one',
       screen: Scaffold(

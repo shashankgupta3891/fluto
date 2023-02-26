@@ -1,5 +1,5 @@
-import 'package:fluto/fluto.dart';
 import 'package:fluto_plugin_platform_interface/core/navigation.dart';
+import 'package:fluto_plugin_platform_interface/core/pluggable.dart';
 import 'package:fluto_plugin_platform_interface/model/plugin_configuration.dart';
 import 'package:flutter/material.dart';
 
@@ -17,7 +17,7 @@ class StorageTestPlugin extends Pluggable {
             children: [
               ElevatedButton(
                 onPressed: () {
-                  pluginCallbackRegister
+                  pluginRegister
                       ?.loadPluginData()
                       .then((value) => print(value));
                 },
@@ -25,7 +25,7 @@ class StorageTestPlugin extends Pluggable {
               ),
               ElevatedButton(
                 onPressed: () {
-                  pluginCallbackRegister?.savePluginData.call("445");
+                  pluginRegister?.savePluginData.call("445");
                 },
                 child: const Text("set Data"),
               ),

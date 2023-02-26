@@ -1,19 +1,32 @@
+import 'dart:async';
 import 'dart:convert';
 
-import 'package:fluto/fluto.dart';
 import 'package:fluto_plugin_platform_interface/core/navigation.dart';
+import 'package:fluto_plugin_platform_interface/core/pluggable.dart';
 import 'package:fluto_plugin_platform_interface/model/plugin_configuration.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class FlutoDynamicBaseUrlManager {
-  final AsyncValueGetter<String> currentBaseUrl;
+class FlutoDynamicBaseUrlManager
+    extends FlutoPluginManager<FlutoBaseUrlChangePluginModel> {
+  final AsyncValueGetter<String> initialBaseUrl;
   Future<String?> getDynamicBaseUrl() async {
-    return currentBaseUrl.call();
+    return initialBaseUrl.call();
   }
 
-  FlutoDynamicBaseUrlManager(this.currentBaseUrl);
+  FlutoDynamicBaseUrlManager(this.initialBaseUrl);
+
+  @override
+  FlutoBaseUrlChangePluginModel? modelFromString(String? value) {
+    if (value == null) return null;
+    return FlutoBaseUrlChangePluginModel.fromJson(value);
+  }
+
+  @override
+  String? stringToModel(FlutoBaseUrlChangePluginModel? model) {
+    return model?.toJson();
+  }
 }
 
 class FlutoDynamicBaseUrlPlugin extends Pluggable {
@@ -35,6 +48,8 @@ class FlutoDynamicBaseUrlPlugin extends Pluggable {
         icon: Icons.network_check,
         description: "Dynamic BaseUrl changer",
       );
+  @override
+  FlutoPluginManager getPluginManager() => flutoDynamicBaseUrlManager;
 }
 
 class PlutoDynamicBaseUrlScreen extends StatefulWidget {
@@ -55,15 +70,22 @@ class _PlutoDynamicBaseUrlScreenState extends State<PlutoDynamicBaseUrlScreen> {
 
   final newBaseUrlTextCtr = TextEditingController();
 
+  Timer? _debounce;
+
   @override
   void initState() {
     super.initState();
     loadCurrentBaseUrl();
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
   void loadCurrentBaseUrl() async {
-    final savedData =
-        await widget.plugin.pluginCallbackRegister?.loadPluginData.call();
+    final savedData = await widget.plugin.pluginRegister?.loadPluginData.call();
     if (savedData?.isNotEmpty ?? false) {
       savedPluginData = FlutoBaseUrlChangePluginModel.fromJson(savedData!);
     } else {
@@ -77,7 +99,7 @@ class _PlutoDynamicBaseUrlScreenState extends State<PlutoDynamicBaseUrlScreen> {
       }
     } else {
       final currentBaseUrlSetInManager =
-          await widget.plugin.flutoDynamicBaseUrlManager.currentBaseUrl.call();
+          await widget.plugin.flutoDynamicBaseUrlManager.initialBaseUrl.call();
       currentBaseUrlTextCtr.text = currentBaseUrlSetInManager;
       if (mounted) {
         setState(() {});
@@ -93,7 +115,7 @@ class _PlutoDynamicBaseUrlScreenState extends State<PlutoDynamicBaseUrlScreen> {
     if (text.isEmpty) {
       return 'Can\'t be empty';
     }
-    if (text.length < 4) {
+    if (text.length < 12) {
       return 'Too short';
     }
 
@@ -185,9 +207,13 @@ class _PlutoDynamicBaseUrlScreenState extends State<PlutoDynamicBaseUrlScreen> {
                         errorText: _errorText,
                       ),
                       onChanged: (value) {
-                        setState(() {
-                          savedPluginData =
-                              savedPluginData.copyWith(savedBaseUrl: value);
+                        if (_debounce?.isActive ?? false) _debounce?.cancel();
+                        _debounce =
+                            Timer(const Duration(milliseconds: 500), () {
+                          setState(() {
+                            savedPluginData =
+                                savedPluginData.copyWith(savedBaseUrl: value);
+                          });
                         });
                       },
                     ),
@@ -208,7 +234,7 @@ class _PlutoDynamicBaseUrlScreenState extends State<PlutoDynamicBaseUrlScreen> {
 
   Future<void> onSave() async {
     try {
-      await widget.plugin.pluginCallbackRegister?.savePluginData
+      await widget.plugin.pluginRegister?.savePluginData
           .call(savedPluginData.toJson());
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text("save")));

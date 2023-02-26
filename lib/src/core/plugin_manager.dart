@@ -1,6 +1,6 @@
 import 'package:fluto_plugin_platform_interface/fluto_plugin_platform_interface.dart';
 
-abstract class FlutoPluginManager {
+abstract class FlutoPluginRegistrar {
   static final Map<String, Pluggable> _plugins = {};
 
   static Map<String, Pluggable> get plugins => _plugins;

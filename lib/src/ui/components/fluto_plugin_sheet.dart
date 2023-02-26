@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 Future<void> showFlutoBottomSheet(BuildContext context) async {
-  final pluginList = FlutoPluginManager.pluginList;
+  final pluginList = FlutoPluginRegistrar.pluginList;
 
   showModalBottomSheet(
     isDismissible: false,
