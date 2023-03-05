@@ -12,7 +12,31 @@ class FlutoDynamicBaseUrlManager
     extends FlutoPluginManager<FlutoBaseUrlChangePluginModel> {
   final AsyncValueGetter<String> initialBaseUrl;
   Future<String?> getDynamicBaseUrl() async {
+    final savedData = await register.loadPluginData.call();
+    if (savedData?.isNotEmpty ?? false) {
+      final savedPluginData =
+          FlutoBaseUrlChangePluginModel.fromJson(savedData!);
+
+      if (savedPluginData.savedBaseUrl.isNotEmpty) {
+        return savedPluginData.savedBaseUrl;
+      }
+    }
+
     return initialBaseUrl.call();
+  }
+
+  Future<Uri?> getHttpUri(String url) async {
+    final parsedUrl = Uri.tryParse(url);
+    if (parsedUrl == null) return null;
+
+    final dynamicBaseUrl = Uri.tryParse(await getDynamicBaseUrl() ?? "");
+
+    if (dynamicBaseUrl == null) return parsedUrl;
+
+    ///TO get new url
+
+    return parsedUrl.replace(
+        scheme: dynamicBaseUrl.scheme, host: dynamicBaseUrl.host);
   }
 
   FlutoDynamicBaseUrlManager(this.initialBaseUrl);

@@ -1,12 +1,16 @@
 import 'dart:developer';
 
+import 'package:alice/alice.dart';
 import 'package:dio/dio.dart';
 import 'package:example/core/fluto/fluto_storage.dart';
 import 'package:example/core/fluto/plugin.dart';
+import 'package:file_saver/file_saver.dart';
 import 'package:fluto/fluto.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 GlobalKey<NavigatorState> navigatorKey = GlobalKey();
@@ -16,23 +20,42 @@ FlutoDynamicBaseUrlManager flutoDynamicBaseUrlManager =
   return "http://www.salfjas.asfjl";
 });
 
+FlutoHTTPClient client = FlutoHTTPClient();
+
 class FlutoHTTPClient extends http.BaseClient {
   @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) {
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    // http.Client client = http.Client();
     Uri.tryParse("https://www.google.com");
+    final newBaseUrl = await flutoDynamicBaseUrlManager.getDynamicBaseUrl();
+    request.url;
+
+    print(newBaseUrl);
     // request.url.resolveUri(reference)
     // request.url.replace();
     // request.url.host
-    throw UnimplementedError();
+    // throw UnimplementedError();
+
+    final response = await request.send();
+
+    // alice.onHttpResponse(
+    //   await http.Response.fromStream(response),
+    // );
+
+    return response;
   }
 }
 
+Alice alice = Alice(navigatorKey: navigatorKey);
+
 Uri url = Uri();
+final dio = Dio(BaseOptions(baseUrl: 'https://jsonplaceholder.typicode.com/'));
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final dio = Dio();
+  dio.interceptors.add(alice.getDioInterceptor());
+
   dio.interceptors.add(InterceptorsWrapper(
     onRequest: (options, handler) {
       // options.copyWith()
@@ -51,21 +74,30 @@ void main() async {
 
   await setupSharedPreference();
   await setupFlutterSecureStorage();
-  FlutoPluginRegistrar.registerAllPlugins([
-    ScreenLauncherPlugin(
-      devIdentifier: 'one',
-      screen: Scaffold(
-        appBar: AppBar(title: const Text("first screen")),
-        body: const Text("first screen"),
+  FlutoPluginRegistrar.registerAllPlugins(
+    [
+      ScreenLauncherPlugin(
+        devIdentifier: 'one',
+        screen: Scaffold(
+          appBar: AppBar(title: const Text("first screen")),
+          body: const Text("first screen"),
+        ),
+        name: "first screen",
       ),
-      name: "first screen",
-    ),
-    StorageTestPlugin(devIdentifier: "storage_test"),
-    FlutoDynamicBaseUrlPlugin(
-      devIdentifier: 'base_url_change',
-      flutoDynamicBaseUrlManager: flutoDynamicBaseUrlManager,
-    )
-  ]);
+      StorageTestPlugin(devIdentifier: "storage_test"),
+      FlutoDynamicBaseUrlPlugin(
+        devIdentifier: 'base_url_change',
+        flutoDynamicBaseUrlManager: flutoDynamicBaseUrlManager,
+      ),
+      ClickLauncherPlugin(
+        devIdentifier: "Alice Launcher",
+        name: "Alice Launcher",
+        onClick: () {
+          alice.showInspector();
+        },
+      )
+    ],
+  );
 
   runApp(Fluto(
     navigatorKey: navigatorKey,
@@ -139,13 +171,33 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  final int _counter = 0;
 
-  void _incrementCounter() {
-    context.showFlutoSheet();
-    setState(() {
-      _counter++;
-    });
+  void _incrementCounter() async {
+    var status = await Permission.storage.status;
+    print(status);
+    if (status.isDenied) {
+      // You can request multiple permissions at once.
+      Map<Permission, PermissionStatus> statuses = await [
+        Permission.storage,
+        Permission.camera,
+      ].request();
+
+      // final stream = Stream.fromIterable('Hello World!'.codeUnits);
+
+      // download(stream, 'hello.txt');
+    } else if (status.isGranted) {
+      Uint8List data = Uint8List.fromList('Hello World!'.codeUnits);
+
+      String path = await FileSaver.instance
+          .saveFile("Fluto_saved_data", data, "txt", mimeType: MimeType.TEXT);
+      log(path);
+    }
+
+    // context.showFlutoSheet();
+    // setState(() {
+    //   _counter++;
+    // });
   }
 
   @override
@@ -189,6 +241,26 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
+            ElevatedButton(
+              onPressed: () async {
+                final generatedUrl =
+                    await flutoDynamicBaseUrlManager.getHttpUri(
+                            'https://jsonplaceholder.typicode.com/posts') ??
+                        Uri.parse('https://jsonplaceholder.typicode.com/posts');
+                client.get(generatedUrl);
+                try {
+                  final response = await dio.get('posts');
+
+                  // final result = await dio.get("/todos/1");
+                  // print(result.data);
+                  print(response);
+                } catch (e, s) {
+                  print(e);
+                  print(s);
+                }
+              },
+              child: const Text("API Call"),
+            )
           ],
         ),
       ),
