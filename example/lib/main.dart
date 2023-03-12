@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:alice/alice.dart';
+import 'package:alice/core/alice_http_extensions.dart';
 import 'package:dio/dio.dart';
 import 'package:example/core/fluto/fluto_storage.dart';
 import 'package:example/core/fluto/plugin.dart';
@@ -244,14 +245,14 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               onPressed: () async {
                 final generatedUrl =
-                    await flutoDynamicBaseUrlManager.getHttpUri(
-                            'https://jsonplaceholder.typicode.com/posts') ??
-                        Uri.parse('https://jsonplaceholder.typicode.com/posts');
-                client.get(generatedUrl);
+                    await flutoDynamicBaseUrlManager.getHttpUri('');
+
+                print("generatedUrl: $generatedUrl");
+                client.get(generatedUrl).interceptWithAlice(alice);
                 try {
                   final response = await dio.get('posts');
 
-                  // final result = await dio.get("/todos/1");
+                  // final result   = await dio.get("/todos/1");
                   // print(result.data);
                   print(response);
                 } catch (e, s) {

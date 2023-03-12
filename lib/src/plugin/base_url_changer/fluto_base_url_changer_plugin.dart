@@ -11,7 +11,15 @@ import 'package:flutter/services.dart';
 class FlutoDynamicBaseUrlManager
     extends FlutoPluginManager<FlutoBaseUrlChangePluginModel> {
   final AsyncValueGetter<String> initialBaseUrl;
+
+  ///Dynamic Base URl means SavedBaseUrl or InitialBaseUrl
   Future<String?> getDynamicBaseUrl() async {
+    final savedData = await getSavedBaseUrl();
+
+    return savedData ?? await initialBaseUrl.call();
+  }
+
+  Future<String?> getSavedBaseUrl() async {
     final savedData = await register.loadPluginData.call();
     if (savedData?.isNotEmpty ?? false) {
       final savedPluginData =
@@ -21,20 +29,17 @@ class FlutoDynamicBaseUrlManager
         return savedPluginData.savedBaseUrl;
       }
     }
-
-    return initialBaseUrl.call();
+    return null;
   }
 
-  Future<Uri?> getHttpUri(String url) async {
-    final parsedUrl = Uri.tryParse(url);
-    if (parsedUrl == null) return null;
+  Future<Uri> getHttpUri(String url) async {
+    final parsedUrl = Uri.parse(url);
 
     final dynamicBaseUrl = Uri.tryParse(await getDynamicBaseUrl() ?? "");
 
     if (dynamicBaseUrl == null) return parsedUrl;
 
     ///TO get new url
-
     return parsedUrl.replace(
         scheme: dynamicBaseUrl.scheme, host: dynamicBaseUrl.host);
   }
@@ -155,13 +160,6 @@ class _PlutoDynamicBaseUrlScreenState extends State<PlutoDynamicBaseUrlScreen> {
     }
 
     final generatedCurrentUrl = Uri.tryParse(currentBaseUrlTextCtr.text);
-
-    // print("generatedCurrentUrl");
-    // print(generatedCurrentUrl?.scheme);
-    // print(generatedCurrentUrl?.host);
-    // print("generatedUrl");
-    // print(generatedUrl?.scheme);
-    // print(generatedUrl?.host);
 
     if (generatedCurrentUrl?.scheme == generatedUrl?.scheme &&
         generatedCurrentUrl?.host == generatedUrl?.host) {
