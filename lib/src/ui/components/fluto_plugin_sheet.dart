@@ -1,10 +1,11 @@
 import 'package:fluto/src/core/plugin_manager.dart';
 import 'package:fluto/src/provider/fluto_provider.dart';
+import 'package:fluto_plugin_platform_interface/core/pluggable.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 Future<void> showFlutoBottomSheet(BuildContext context) async {
-  final pluginList = FlutoPluginManager.plugins;
+  final pluginList = FlutoPluginRegistrar.pluginList;
 
   showModalBottomSheet(
     isDismissible: false,
@@ -50,19 +51,7 @@ Future<void> showFlutoBottomSheet(BuildContext context) async {
                         Theme.of(context).cardColor,
                         Theme.of(context).secondaryHeaderColor,
                       ),
-                      child: ListTile(
-                        dense: true,
-                        leading: Icon(plugin.pluginConfiguration.icon),
-                        title: Text(plugin.pluginConfiguration.name),
-                        subtitle:
-                            plugin.pluginConfiguration.description.isNotEmpty
-                                ? Text(plugin.pluginConfiguration.description)
-                                : null,
-                        onTap: () {
-                          plugin.setup(provider.navigatorKey);
-                          plugin.navigation.onLaunch.call();
-                        },
-                      ),
+                      child: FlutoSheetListTile(plugin: plugin),
                     );
                   },
                 ),
@@ -73,4 +62,38 @@ Future<void> showFlutoBottomSheet(BuildContext context) async {
       );
     },
   );
+}
+
+class FlutoSheetListTile extends StatelessWidget {
+  const FlutoSheetListTile({
+    Key? key,
+    required this.plugin,
+  }) : super(key: key);
+
+  final Pluggable plugin;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      dense: true,
+      leading: Icon(plugin.pluginConfiguration.icon),
+      title: Text(plugin.pluginConfiguration.name),
+      subtitle: plugin.pluginConfiguration.description.isNotEmpty
+          ? Text(plugin.pluginConfiguration.description)
+          : null,
+      trailing: ValueListenableBuilder(
+        valueListenable: plugin.pluginConfiguration.enable,
+        builder: (BuildContext context, bool value, Widget? child) {
+          return Switch.adaptive(
+            value: value,
+            onChanged: (value) =>
+                plugin.pluginConfiguration.enable.value = value,
+          );
+        },
+      ),
+      onTap: () {
+        plugin.navigation.onLaunch.call();
+      },
+    );
+  }
 }

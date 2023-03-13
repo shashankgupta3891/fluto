@@ -1,16 +1,21 @@
 import 'package:fluto_plugin_platform_interface/fluto_plugin_platform_interface.dart';
 
-abstract class FlutoPluginManager {
-  static final List<Pluggable> _plugins = [];
+abstract class FlutoPluginRegistrar {
+  static final Map<String, Pluggable> _plugins = {};
 
-  static List<Pluggable> get plugins => _plugins;
+  static Map<String, Pluggable> get plugins => _plugins;
+  static List<Pluggable> get pluginList => _plugins.values.toList();
 
   static void registerPlugin(Pluggable plugin) {
-    _plugins.add(plugin);
+    _plugins.addEntries([MapEntry(plugin.devIdentifier, plugin)]);
   }
 
   static void unregisterPlugin(Pluggable plugin) {
     _plugins.remove(plugin);
+  }
+
+  static void unregisterPluginById(String pluginId) {
+    return _plugins.removeWhere((key, value) => key == pluginId);
   }
 
   static void unregisterAllPlugins() {
@@ -19,7 +24,7 @@ abstract class FlutoPluginManager {
 
   static void registerAllPlugins([List<Pluggable>? plugins]) {
     if (plugins != null) {
-      _plugins.addAll(plugins);
+      _plugins.addEntries(plugins.map((e) => MapEntry(e.devIdentifier, e)));
     }
   }
 }

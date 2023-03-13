@@ -1,21 +1,140 @@
+import 'dart:developer';
+
+import 'package:alice/alice.dart';
+import 'package:alice/core/alice_http_extensions.dart';
+import 'package:dio/dio.dart';
+import 'package:example/core/fluto/fluto_storage.dart';
+import 'package:example/core/fluto/plugin.dart';
+import 'package:file_saver/file_saver.dart';
 import 'package:fluto/fluto.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 GlobalKey<NavigatorState> navigatorKey = GlobalKey();
 
-void main() {
-  FlutoPluginManager.registerAllPlugins([
-    ScreenLauncherPlugin(
-      devIdentifier: 'one',
-      screen: Scaffold(
-        appBar: AppBar(title: const Text("first screen")),
-        body: const Text("first screen"),
-      ),
-      name: "first screen",
-    )
-  ]);
+FlutoDynamicBaseUrlManager flutoDynamicBaseUrlManager =
+    FlutoDynamicBaseUrlManager(() async {
+  return "http://www.salfjas.asfjl";
+});
 
-  runApp(Fluto(navigatorKey: navigatorKey, child: const MyApp()));
+FlutoHTTPClient client = FlutoHTTPClient();
+
+class FlutoHTTPClient extends http.BaseClient {
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    // http.Client client = http.Client();
+    Uri.tryParse("https://www.google.com");
+    final newBaseUrl = await flutoDynamicBaseUrlManager.getDynamicBaseUrl();
+    request.url;
+
+    print(newBaseUrl);
+    // request.url.resolveUri(reference)
+    // request.url.replace();
+    // request.url.host
+    // throw UnimplementedError();
+
+    final response = await request.send();
+
+    // alice.onHttpResponse(
+    //   await http.Response.fromStream(response),
+    // );
+
+    return response;
+  }
+}
+
+Alice alice = Alice(navigatorKey: navigatorKey);
+
+Uri url = Uri();
+final dio = Dio(BaseOptions(baseUrl: 'https://jsonplaceholder.typicode.com/'));
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  dio.interceptors.add(alice.getDioInterceptor());
+
+  dio.interceptors.add(InterceptorsWrapper(
+    onRequest: (options, handler) {
+      // options.copyWith()
+      // options.copyWith(baseUrl: "baseUrl");
+      // handler.next(options);
+      // options.
+    },
+  ));
+
+  var url = Uri.https('example.com', 'whatsit/create');
+  var response =
+      await http.post(url, body: {'name': 'doodle', 'color': 'blue'});
+  final http.Client client = http.Client();
+
+  // client.send(request)
+
+  await setupSharedPreference();
+  await setupFlutterSecureStorage();
+  FlutoPluginRegistrar.registerAllPlugins(
+    [
+      ScreenLauncherPlugin(
+        devIdentifier: 'one',
+        screen: Scaffold(
+          appBar: AppBar(title: const Text("first screen")),
+          body: const Text("first screen"),
+        ),
+        name: "first screen",
+      ),
+      StorageTestPlugin(devIdentifier: "storage_test"),
+      FlutoDynamicBaseUrlPlugin(
+        devIdentifier: 'base_url_change',
+        flutoDynamicBaseUrlManager: flutoDynamicBaseUrlManager,
+      ),
+      ClickLauncherPlugin(
+        devIdentifier: "Alice Launcher",
+        name: "Alice Launcher",
+        onClick: () {
+          alice.showInspector();
+        },
+      )
+    ],
+  );
+
+  runApp(Fluto(
+    navigatorKey: navigatorKey,
+    storage: SharedPreferencesFlutoStorage(),
+    child: const MyApp(),
+  ));
+}
+
+Future<void> setupFlutterSecureStorage() async {
+// Create storage
+  const storage = FlutterSecureStorage();
+
+// Save an integer value to 'counter' key.
+  await storage.write(key: 'counter', value: "1302");
+// Save an boolean value to 'repeat' key.
+  await storage.read(key: 'repeat');
+}
+
+Future<void> setupSharedPreference() async {
+  try {
+    // Obtain shared preferences.
+    final prefs = await SharedPreferences.getInstance();
+
+// Save an integer value to 'counter' key.
+    await prefs.setInt('counter', 10);
+// Save an boolean value to 'repeat' key.
+    await prefs.setBool('repeat', true);
+// Save an double value to 'decimal' key.
+    await prefs.setDouble('decimal', 1.5);
+// Save an String value to 'action' key.
+    await prefs.setString('action', 'Start');
+// Save an list of strings to 'items' key.
+    await prefs.setStringList('items', <String>['Earth', 'Moon', 'Sun']);
+  } catch (e, s) {
+    log("SharedPref Init", error: e, stackTrace: s);
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -53,13 +172,33 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  final int _counter = 0;
 
-  void _incrementCounter() {
-    context.showFlutoSheet();
-    setState(() {
-      _counter++;
-    });
+  void _incrementCounter() async {
+    var status = await Permission.storage.status;
+    print(status);
+    if (status.isDenied) {
+      // You can request multiple permissions at once.
+      Map<Permission, PermissionStatus> statuses = await [
+        Permission.storage,
+        Permission.camera,
+      ].request();
+
+      // final stream = Stream.fromIterable('Hello World!'.codeUnits);
+
+      // download(stream, 'hello.txt');
+    } else if (status.isGranted) {
+      Uint8List data = Uint8List.fromList('Hello World!'.codeUnits);
+
+      String path = await FileSaver.instance
+          .saveFile("Fluto_saved_data", data, "txt", mimeType: MimeType.TEXT);
+      log(path);
+    }
+
+    // context.showFlutoSheet();
+    // setState(() {
+    //   _counter++;
+    // });
   }
 
   @override
@@ -103,6 +242,26 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
+            ElevatedButton(
+              onPressed: () async {
+                final generatedUrl =
+                    await flutoDynamicBaseUrlManager.getHttpUri('');
+
+                print("generatedUrl: $generatedUrl");
+                client.get(generatedUrl).interceptWithAlice(alice);
+                try {
+                  final response = await dio.get('posts');
+
+                  // final result   = await dio.get("/todos/1");
+                  // print(result.data);
+                  print(response);
+                } catch (e, s) {
+                  print(e);
+                  print(s);
+                }
+              },
+              child: const Text("API Call"),
+            )
           ],
         ),
       ),

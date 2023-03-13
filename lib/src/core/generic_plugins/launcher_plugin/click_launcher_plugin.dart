@@ -21,4 +21,7 @@ class ClickLauncherPlugin extends Pluggable {
   @override
   PluginConfiguration get pluginConfiguration =>
       PluginConfiguration(name: name, icon: icon, description: description);
+
+  @override
+  FlutoPluginManager? get pluginManager => null;
 }
