@@ -52,7 +52,6 @@ class _FlutoState extends State<Fluto> {
       final pluginRegister = PluginRegister(
         globalNavigatorKey: widget.navigatorKey,
         savePluginData: (final value) async {
-          print("savePluginData value: $value");
           if (_savedData == null) {
             _savedData = FlutoStorageModel(
               setting: {..._savedData?.setting ?? {}},
@@ -64,12 +63,9 @@ class _FlutoState extends State<Fluto> {
           } else {
             _savedData?.pluginInternalData?[plugin.devIdentifier] = value;
           }
-          print(_savedData);
           _savedData?.toJson().let((it) => widget.storage.save(it));
         },
         loadPluginData: () async {
-          print("loadPluginData");
-
           return _savedData?.pluginInternalData?[plugin.devIdentifier];
         },
       );
